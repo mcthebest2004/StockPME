@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>StockPME — Gestionnaire de stock</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAF7F2; --card:#FFFFFF; --ink:#3A3A38; --sub:#8A857D;
+  --primary:#C9A6D9; --primary-ink:#4A2E52;
+  --accent:#F3D9B1; --danger:#E38686; --ok:#9BC7A0;
+  --radius:16px; --shadow:0 2px 10px rgba(60,50,40,.08);
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  box-sizing:border-box;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Nunito',sans-serif;-webkit-font-smoothing:antialiased;}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+header{position:sticky;top:0;padding-top:env(safe-area-inset-top,0px);background:var(--bg);z-index:20;border-bottom:1px solid rgba(0,0,0,.06);}
+.wrap{max-width:1080px;margin:0 auto;padding:18px 20px;}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.top h1{font-size:1.5rem;color:var(--primary-ink);}
+.top h1 span{color:var(--sub);font-family:'Nunito',sans-serif;font-weight:600;font-size:.9rem;display:block;}
+.btn{border:none;border-radius:12px;padding:10px 16px;font-family:'Nunito';font-weight:700;cursor:pointer;font-size:.92rem;transition:transform .12s ease;}
+.btn:active{transform:scale(.96);}
+.btn-primary{background:var(--primary);color:var(--primary-ink);}
+.btn-ghost{background:transparent;border:1.5px solid rgba(0,0,0,.12);color:var(--ink);}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0;}
+.stat{background:var(--card);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);}
+.stat b{font-family:'Fraunces';font-size:1.5rem;display:block;}
+.stat span{color:var(--sub);font-size:.82rem;}
+.toolbar{display:flex;gap:10px;margin:10px 0 18px;flex-wrap:wrap;align-items:center;}
+input,select{font-family:'Nunito';border:1.5px solid rgba(0,0,0,.12);border-radius:10px;padding:9px 12px;font-size:.92rem;background:#fff;color:var(--ink);}
+.search{flex:1;min-width:160px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;padding-bottom:40px;}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;}
+.thumb{height:120px;background:linear-gradient(135deg,var(--accent),var(--primary));display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;position:relative;}
+.thumb img{width:100%;height:100%;object-fit:cover;}
+.badge{position:absolute;top:8px;right:8px;background:var(--danger);color:#fff;font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:20px;}
+.card-body{padding:12px 14px;display:flex;flex-direction:column;gap:4px;flex:1;}
+.card-body b{font-size:1rem;}
+.card-body .cat{color:var(--sub);font-size:.78rem;}
+.qtyrow{display:flex;justify-content:space-between;align-items:center;margin-top:6px;}
+.qty{font-family:'Fraunces';font-size:1.3rem;}
+.card-actions{display:flex;gap:6px;padding:0 14px 12px;}
+.icon-btn{flex:1;border:none;background:rgba(0,0,0,.05);border-radius:8px;padding:7px;cursor:pointer;font-size:.85rem;}
+.icon-btn.del{color:var(--danger);}
+.empty{text-align:center;padding:60px 20px;color:var(--sub);}
+.overlay{position:fixed;inset:0;background:rgba(30,25,20,.35);display:none;align-items:flex-end;justify-content:center;z-index:50;}
+.overlay.show{display:flex;}
+.sheet{background:var(--card);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:22px 22px calc(22px + env(safe-area-inset-bottom,0px));max-height:88vh;overflow-y:auto;}
+@media(min-width:600px){.overlay{align-items:center;}.sheet{border-radius:20px;}}
+.sheet h2{margin-bottom:14px;}
+.field{margin-bottom:12px;display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:.82rem;font-weight:700;color:var(--sub);}
+.field input,.field select{width:100%;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.imgpick{border:2px dashed rgba(0,0,0,.15);border-radius:12px;height:100px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--sub);overflow:hidden;position:relative;}
+.imgpick img{width:100%;height:100%;object-fit:cover;position:absolute;}
+.sheet-actions{display:flex;gap:10px;margin-top:16px;}
+.sheet-actions .btn{flex:1;}
+.themebar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,.15);}
+.swatch.active{box-shadow:0 0 0 2px var(--ink);}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#242220;--card:#2E2B28;--ink:#F0ECE6;--sub:#A79E92;}
+}
+:root[data-theme="dark"]{--bg:#242220;--card:#2E2B28;--ink:#F0ECE6;--sub:#A79E92;}
+.login-screen{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-box{background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:32px 26px;width:100%;max-width:380px;}
+.login-box h1{font-size:1.6rem;color:var(--primary-ink);margin-bottom:4px;}
+.login-box p.lead{color:var(--sub);font-size:.9rem;margin:0 0 20px;}
+.google-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;border:1.5px solid rgba(0,0,0,.15);border-radius:12px;padding:11px;font-family:'Nunito';font-weight:700;font-size:.92rem;cursor:pointer;color:#3A3A38;}
+.gdot{font-weight:800;background:linear-gradient(135deg,#4285F4,#EA4335,#FBBC05,#34A853);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--sub);font-size:.8rem;}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:rgba(0,0,0,.12);}
+.note{background:rgba(0,0,0,.04);border-radius:10px;padding:10px 12px;font-size:.8rem;color:var(--sub);margin-bottom:14px;display:none;}
+.note.show{display:block;}
+.userchip{display:flex;align-items:center;gap:8px;}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--primary);color:var(--primary-ink);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;font-family:'Fraunces';}
+.linklike{background:none;border:none;color:var(--sub);text-decoration:underline;cursor:pointer;font-family:'Nunito';font-size:.82rem;padding:0;}
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <h1>StockPME</h1>
+    <p class="lead">Connectez-vous pour retrouver votre stock.</p>
+    <p style="font-size:.78rem;color:var(--sub);background:rgba(0,0,0,.04);border-radius:10px;padding:8px 10px;margin:0 0 14px;">Ouvert depuis Claude ? Vous serez reconnu automatiquement et votre stock sera sauvegardé sur le serveur, retrouvable sur tous vos appareils.</p>
+    <button class="google-btn" id="googleBtn"><span class="gdot">G</span> Continuer avec Google</button>
+    <div class="note" id="googleNote">Ceci est un prototype : la connexion Google n'est pas réellement branchée (cela demanderait un serveur). Indiquez simplement votre nom ci-dessous pour continuer, comme si Google venait de vous identifier.</div>
+    <div class="divider">ou avec un code personnel</div>
+    <div class="field"><label>Votre nom</label><input id="loginName" placeholder="Ex : Marie-Claudia"></div>
+    <div class="field"><label>Code personnel (4 chiffres)</label><input id="loginCode" inputmode="numeric" maxlength="4" placeholder="••••"></div>
+    <p style="font-size:.76rem;color:var(--sub);margin:0 0 10px;">Première connexion sur cet appareil : ce code sera enregistré pour la prochaine fois.</p>
+    <button class="btn btn-primary" id="loginBtn" style="width:100%;margin-top:0;">Se connecter</button>
+  </div>
+</div>
+
+<header><div class="wrap top">
+  <h1>StockPME<span id="headerSub">Gérez votre stock, à votre façon</span></h1>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <div class="userchip" id="userChip" style="display:none">
+      <div class="avatar" id="userAvatar"></div>
+      <button class="linklike" id="logoutBtn">Déconnexion</button>
+    </div>
+    <button class="btn btn-ghost" id="themeBtn">🎨 Thème</button>
+    <button class="btn btn-primary" id="addBtn">+ Article</button>
+  </div>
+</div></header>
+
+<div class="wrap">
+  <div class="stats" id="stats"></div>
+  <div class="toolbar">
+    <input class="search" id="search" placeholder="Rechercher un article…">
+    <select id="filterCat"><option value="">Toutes catégories</option></select>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="overlay" id="formOverlay"><div class="sheet">
+  <h2 id="formTitle">Nouvel article</h2>
+  <div class="field"><label>Photo</label>
+    <div class="imgpick" id="imgPick">Toucher pour ajouter une photo<img id="imgPreview" style="display:none"></div>
+    <input type="file" id="imgInput" accept="image/*" style="display:none">
+  </div>
+  <div class="field"><label>Nom de l'article</label><input id="fName" placeholder="Ex : Savon artisanal"></div>
+  <div class="row2">
+    <div class="field"><label>Catégorie</label><input id="fCat" placeholder="Ex : Hygiène" list="catList"><datalist id="catList"></datalist></div>
+    <div class="field"><label>Prix unitaire (optionnel)</label><input id="fPrice" type="number" min="0" step="0.01" placeholder="0"></div>
+  </div>
+  <div class="row2">
+    <div class="field"><label>Quantité en stock</label><input id="fQty" type="number" min="0" placeholder="0"></div>
+    <div class="field"><label>Seuil d'alerte</label><input id="fAlert" type="number" min="0" placeholder="5"></div>
+  </div>
+  <div class="sheet-actions">
+    <button class="btn btn-ghost" id="cancelBtn">Annuler</button>
+    <button class="btn btn-primary" id="saveBtn">Enregistrer</button>
+  </div>
+</div></div>
+
+<div class="overlay" id="themeOverlay"><div class="sheet">
+  <h2>Personnaliser le thème</h2>
+  <div class="field"><label>Palettes proposées</label>
+    <div class="themebar" id="palettes"></div>
+  </div>
+  <div class="row2">
+    <div class="field"><label>Couleur d'accent</label><input type="color" id="customPrimary"></div>
+    <div class="field"><label>Couleur de fond</label><input type="color" id="customBg"></div>
+  </div>
+  <div class="field"><label>Mode</label>
+    <select id="modeSelect"><option value="system">Automatique</option><option value="light">Clair</option><option value="dark">Sombre</option></select>
+  </div>
+  <div class="sheet-actions"><button class="btn btn-primary" id="closeThemeBtn" style="flex:1">Fermer</button></div>
+</div></div>
+
+<script>
+const LS_KEY='stockpme_items', LS_THEME='stockpme_theme';
+let items=[], editingId=null, tempImg=null;
+let cloudMode=false, cloudRef=null, cloudUid=null, currentTheme=null;
+const $=s=>document.querySelector(s);
+
+function load(){try{items=JSON.parse(localStorage.getItem(LS_KEY))||[];}catch(e){items=[];}}
+function save(){
+  try{localStorage.setItem(LS_KEY,JSON.stringify(items));}catch(e){}
+  if(cloudMode && cloudRef){cloudRef.set({items,theme:currentTheme,updatedAt:Date.now()}).catch(()=>{});}
+}
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+
+function render(){
+  const q=$('#search').value.toLowerCase(), cat=$('#filterCat').value;
+  const cats=[...new Set(items.map(i=>i.cat).filter(Boolean))];
+  $('#filterCat').innerHTML='<option value="">Toutes catégories</option>'+cats.map(c=>`<option ${c===cat?'selected':''}>${c}</option>`).join('');
+  $('#catList').innerHTML=cats.map(c=>`<option value="${c}">`).join('');
+
+  const filtered=items.filter(i=> (!q||i.name.toLowerCase().includes(q)) && (!cat||i.cat===cat));
+  const totalItems=items.length;
+  const totalQty=items.reduce((s,i)=>s+Number(i.qty||0),0);
+  const totalVal=items.reduce((s,i)=>s+Number(i.qty||0)*Number(i.price||0),0);
+  const lowCount=items.filter(i=>Number(i.qty)<=Number(i.alert||0)).length;
+  $('#stats').innerHTML=`
+    <div class="stat"><b>${totalItems}</b><span>Articles référencés</span></div>
+    <div class="stat"><b>${totalQty}</b><span>Unités en stock</span></div>
+    <div class="stat"><b>${totalVal.toFixed(2)}</b><span>Valeur du stock</span></div>
+    <div class="stat"><b style="color:${lowCount?'var(--danger)':'var(--ok)'}">${lowCount}</b><span>Stock bas</span></div>`;
+
+  if(!filtered.length){$('#grid').innerHTML=`<div class="empty" style="grid-column:1/-1">${items.length? "Aucun article ne correspond à la recherche.":"Aucun article pour l'instant. Ajoutez votre premier article."}</div>`;return;}
+
+  $('#grid').innerHTML=filtered.map(i=>{
+    const low=Number(i.qty)<=Number(i.alert||0);
+    return `<div class="card">
+      <div class="thumb">${i.img?`<img src="${i.img}">`:'📦'}${low?'<span class="badge">Stock bas</span>':''}</div>
+      <div class="card-body">
+        <b>${i.name}</b>
+        ${i.cat?`<span class="cat">${i.cat}</span>`:''}
+        <div class="qtyrow"><span class="qty">${i.qty}</span><span style="color:var(--sub);font-size:.8rem">${i.price?Number(i.price).toFixed(2)+' /unité':''}</span></div>
+      </div>
+      <div class="card-actions">
+        <button class="icon-btn" onclick="editItem('${i.id}')">Modifier</button>
+        <button class="icon-btn del" onclick="delItem('${i.id}')">Supprimer</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openForm(item){
+  editingId=item?item.id:null;
+  tempImg=item?item.img:null;
+  $('#formTitle').textContent=item?'Modifier l\u2019article':'Nouvel article';
+  $('#fName').value=item?.name||''; $('#fCat').value=item?.cat||'';
+  $('#fPrice').value=item?.price||''; $('#fQty').value=item?.qty??''; $('#fAlert').value=item?.alert??'';
+  if(tempImg){$('#imgPreview').src=tempImg;$('#imgPreview').style.display='block';}
+  else{$('#imgPreview').style.display='none';}
+  $('#formOverlay').classList.add('show');
+}
+window.editItem=id=>openForm(items.find(i=>i.id===id));
+window.delItem=id=>{ if(confirm('Supprimer cet article ?')){items=items.filter(i=>i.id!==id);save();render();} };
+
+$('#addBtn').onclick=()=>openForm(null);
+$('#cancelBtn').onclick=()=>$('#formOverlay').classList.remove('show');
+$('#imgPick').onclick=()=>$('#imgInput').click();
+$('#imgInput').onchange=e=>{
+  const f=e.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{tempImg=r.result;$('#imgPreview').src=tempImg;$('#imgPreview').style.display='block';};
+  r.readAsDataURL(f);
+};
+$('#saveBtn').onclick=()=>{
+  const name=$('#fName').value.trim();
+  if(!name){alert('Merci de donner un nom à l\u2019article.');return;}
+  const data={name,cat:$('#fCat').value.trim(),price:$('#fPrice').value||0,qty:$('#fQty').value||0,alert:$('#fAlert').value||0,img:tempImg};
+  if(editingId){items=items.map(i=>i.id===editingId?{...i,...data}:i);}
+  else{items.push({id:uid(),...data});}
+  save();render();$('#formOverlay').classList.remove('show');
+};
+$('#search').oninput=render; $('#filterCat').onchange=render;
+
+// Theming
+const palettes=[
+  {name:'Lavande',primary:'#C9A6D9',bg:'#FAF7F2'},
+  {name:'Sauge',primary:'#9BC7A0',bg:'#F6F8F2'},
+  {name:'Corail',primary:'#F2A896',bg:'#FBF5F0'},
+  {name:'Ciel',primary:'#9FC3DE',bg:'#F4F8FA'},
+  {name:'Miel',primary:'#F3D9B1',bg:'#FBF7EE'},
+];
+function applyTheme(t,fromCloud){
+  currentTheme=t;
+  document.documentElement.style.setProperty('--primary',t.primary);
+  document.documentElement.style.setProperty('--bg',t.bg);
+  document.documentElement.style.setProperty('--primary-ink', t.ink||'#3A3A38');
+  document.documentElement.setAttribute('data-theme',t.mode||'system');
+  try{localStorage.setItem(LS_THEME,JSON.stringify(t));}catch(e){}
+  drawPalettes(t);
+  if(!fromCloud && cloudMode && cloudRef){cloudRef.set({items,theme:t,updatedAt:Date.now()}).catch(()=>{});}
+}
+function drawPalettes(current){
+  $('#palettes').innerHTML=palettes.map(p=>`<div class="swatch ${current&&current.primary===p.primary?'active':''}" style="background:${p.primary}" onclick='applyTheme(${JSON.stringify(p)})' title="${p.name}"></div>`).join('');
+}
+$('#themeBtn').onclick=()=>$('#themeOverlay').classList.add('show');
+$('#closeThemeBtn').onclick=()=>$('#themeOverlay').classList.remove('show');
+$('#customPrimary').oninput=e=>applyTheme({primary:e.target.value,bg:getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),mode:$('#modeSelect').value});
+$('#customBg').oninput=e=>applyTheme({primary:getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(),bg:e.target.value,mode:$('#modeSelect').value});
+$('#modeSelect').onchange=e=>applyTheme({primary:getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(),bg:getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),mode:e.target.value});
+
+// Connexion (démo locale — voir note dans l'écran de connexion)
+const LS_PROFILE='stockpme_profile';
+function getProfile(){try{return JSON.parse(localStorage.getItem(LS_PROFILE));}catch(e){return null;}}
+function greet(profile){
+  $('#headerSub').textContent='Bienvenue, '+profile.name+' 👋';
+  $('#userChip').style.display='flex';
+  $('#userAvatar').textContent=profile.name.trim().slice(0,1).toUpperCase();
+  $('#loginScreen').style.display='none';
+}
+$('#googleBtn').onclick=()=>{$('#googleNote').classList.add('show');$('#loginName').focus();};
+$('#loginBtn').onclick=()=>{
+  const name=$('#loginName').value.trim();
+  const code=$('#loginCode').value.trim();
+  if(!name){alert('Merci d\u2019indiquer votre nom.');return;}
+  if(!/^\d{4}$/.test(code)){alert('Le code doit contenir exactement 4 chiffres.');return;}
+  const existing=getProfile();
+  if(existing && existing.name.toLowerCase()===name.toLowerCase()){
+    // compte déjà créé sur cet appareil : le code doit correspondre
+    if(existing.code!==code){alert('Code incorrect pour ce compte.');return;}
+    greet(existing);
+    return;
+  }
+  // premier appareil/première fois : on crée le compte avec ce code
+  const profile={name,code};
+  try{localStorage.setItem(LS_PROFILE,JSON.stringify(profile));}catch(e){}
+  greet(profile);
+};
+$('#logoutBtn').onclick=()=>{
+  try{localStorage.removeItem(LS_PROFILE);}catch(e){}
+  $('#userChip').style.display='none';
+  $('#headerSub').textContent='Gérez votre stock, à votre façon';
+  $('#loginName').value='';$('#loginCode').value='';$('#googleNote').classList.remove('show');
+  $('#loginScreen').style.display='flex';
+};
+
+// init
+load();
+let savedTheme=null;
+try{savedTheme=JSON.parse(localStorage.getItem(LS_THEME));}catch(e){}
+if(savedTheme)applyTheme(savedTheme); else drawPalettes(palettes[0]);
+render();
+const existingProfile=getProfile();
+if(existingProfile)greet(existingProfile);
+
+// Vraie sauvegarde serveur si la page est ouverte via claude.ai (compte reconnu automatiquement)
+async function tryCloud(){
+  if(typeof claude==='undefined' || !claude.use) return; // fichier ouvert hors claude.ai : on reste en mode local
+  try{
+    const cuser=await claude.use('user');
+    const cdb=await claude.use('db');
+    if(!cuser || !cdb) return;
+    const id=await cuser.id();
+    if(!id) return;
+    const me=await cuser.me();
+    cloudMode=true; cloudUid=id; cloudRef=cdb.doc('data/users/'+id+'/stock');
+    const snap=await cloudRef.get();
+    if(snap.exists){
+      const data=snap.data();
+      items=data.items||[];
+      if(data.theme)applyTheme(data.theme,true);
+    }
+    $('#loginScreen').style.display='none';
+    $('#headerSub').textContent='Bienvenue, '+(me.name||'vous')+' 👋 (compte Claude)';
+    $('#userChip').style.display='flex';
+    $('#userAvatar').textContent=(me.name||'?').trim().slice(0,1).toUpperCase();
+    $('#logoutBtn').style.display='none';
+    render();
+  }catch(e){ /* capacité indisponible pour cette vue : on reste en mode local */ }
+}
+tryCloud();
+</script>
+</body>
+</html>
