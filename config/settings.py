@@ -17,7 +17,12 @@ if not SECRET_KEY:
         except FileExistsError:
             pass
     SECRET_KEY = key_file.read_text().strip()
-ALLOWED_HOSTS = ['.vercel.app', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = [
+    'stock-pme-sigma.vercel.app',
+    'stock-3m0xvljp7-mcthebest.vercel.app',
+    'localhost',
+    '127.0.0.1',
+]
 INSTALLED_APPS = ['django.contrib.admin', 'django.contrib.auth', 'django.contrib.contenttypes', 'django.contrib.sessions', 'django.contrib.messages', 'django.contrib.staticfiles', 'stock']
 MIDDLEWARE = ['django.middleware.security.SecurityMiddleware', 'django.contrib.sessions.middleware.SessionMiddleware', 'django.middleware.common.CommonMiddleware', 'django.middleware.csrf.CsrfViewMiddleware', 'django.contrib.auth.middleware.AuthenticationMiddleware', 'django.contrib.messages.middleware.MessageMiddleware', 'django.middleware.clickjacking.XFrameOptionsMiddleware']
 ROOT_URLCONF = 'config.urls'
