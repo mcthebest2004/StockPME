@@ -79,8 +79,8 @@ if os.environ.get('CLOUDINARY_CLOUD_NAME'):
             'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
         },
         'staticfiles': {
-            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
-        },
+    'BACKEND': 'cloudinary_storage.storage.StaticHashedCloudinaryStorage',
+},
     }
 else:
     STORAGES = {
