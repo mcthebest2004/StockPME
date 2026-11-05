@@ -70,7 +70,8 @@ CLOUDINARY_STORAGE = {
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
 }
-
+# Compatibilité avec django-cloudinary-storage
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 # Configuration du stockage des fichiers
 if os.environ.get('CLOUDINARY_CLOUD_NAME'):
     STORAGES = {
